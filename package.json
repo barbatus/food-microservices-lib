@@ -1,0 +1,13 @@
+{
+  "name": "food-microservices-lib",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "micro": "^7.3.0",
+    "now-logs": "^0.0.7",
+    "request": "^2.81.0",
+    "stripe": "4.17.1",
+    "url": "^0.11.0"
+  }
+}
