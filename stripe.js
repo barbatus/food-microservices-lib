@@ -1,60 +1,62 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET);
 
-function createCustomerAndAddSource(
-  email, name, source,
-  onSuccess, onError
-) {
-  stripe.customers.create({
-    email,
-    description: name,
-  }, (err, customer) => {
-    if (err) {
-      console.log(err);
-      return onError(err);
-    }
-    return stripe.customers.createSource(
-      customer.id, { source }, (err, card) => {
+const Promise = require('promise');
+
+function createCustomerAndAddSource(email, name, source) {
+  return new Promise((resolve, reject) => {
+    stripe.customers.create({
+      email,
+      description: name,
+    }, (err, customer) => {
       if (err) {
         console.log(err);
-        return onError(err);
+        return reject(err);
       }
-      return onSuccess(customer, card);
+      return stripe.customers.createSource(
+        customer.id, { source }, (err, card) => {
+        if (err) {
+          console.log(err);
+          return reject(err);
+        }
+        return resolve({ customer, card });
+      });
     });
   });
 }
 
-function createCharge(
-  amount, customerId, cardId,
-  onSuccess, onError
-) {
+function createCharge(amount, customerId, cardId) {
   console.log(`Charging ${customerId} using ${cardId} card.`);
-  stripe.charges.create({
-    amount: Math.floor(amount),
-    customer: customerId,
-    source: cardId,
-    currency: 'usd',
-    description: 'Nomiku order',
-  }, function(err, charge) {
-    if (err) {
-      console.log(err);
-      return onError(err);
-    }
-    console.log(`Charge ${charge.id} created.`);
-    return onSuccess(charge);
+  return new Promise((resolve, reject) => {
+    stripe.charges.create({
+      amount: Math.floor(amount),
+      customer: customerId,
+      source: cardId,
+      currency: 'usd',
+      description: 'Nomiku order',
+    }, (err, charge) => {
+      if (err) {
+        console.log(err);
+        return reject(err);
+      }
+      console.log(`Charge ${charge.id} created.`);
+      return resolve(charge);
+    });
   });
 }
 
-function createRefund(chargeId, onSuccess, onError) {
+function createRefund(chargeId) {
   console.log(`Refunding ${chargeId}.`);
-  stripe.refunds.create({
-    charge: chargeId,
-  }, (err, refund) => {
-    if (err) {
-      console.log(err);
-      return onError(err);
-    }
-    console.log(`Charge ${chargeId} refunded.`);
-    return onSuccess(refund);
+  return new Promise((resolve, reject) => {
+    stripe.refunds.create({
+      charge: chargeId,
+    }, (err, refund) => {
+      if (err) {
+        console.log(err);
+        return reject(err);
+      }
+      console.log(`Charge ${chargeId} refunded.`);
+      return resolve(refund);
+    });
   });
 }
 

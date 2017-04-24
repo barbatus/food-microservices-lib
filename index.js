@@ -1,14 +1,12 @@
-const createCustomerAndAddSource =
-  require('./stripe').createCustomerAndAddSource;
+const {
+  createCustomerAndAddSource,
+  createCharge,
+  createRefund,
+} = require('./stripe');
 
-const createCharge = require('./stripe').createCharge;
+const { execGQLQuery } = require('./gql');
 
-const createRefund = require('./stripe').createRefund;
-
-const execGQLQuery = require('./gql').execGQLQuery;
-
-const processOrderChargeAndRespond =
-  require('./order').processOrderChargeAndRespond;
+const { processOrderChargeAndRespond } = require('./order');
 
 const updateOrderUnverified = require('./order').updateUnverified;
 

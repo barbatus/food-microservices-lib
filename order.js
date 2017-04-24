@@ -1,78 +1,70 @@
 const { json, send } = require('micro');
 
-const createCharge = require('./stripe').createCharge;
+const { createCharge } = require('./stripe');
 
-const execGQLQuery = require('./gql').execGQLQuery;
+const { execGQLQuery } = require('./gql');
 
-function processOrderChargeAndRespond(
+async function processOrderChargeAndRespond(
   totalCost, userId, orderId,
   userStripeId, cardStripeId
 ) {
-  console.log(`Order ${orderId} is about to be charged.`);
-  createCharge(
-    totalCost * 100, userStripeId, cardStripeId,
-    (charge) => {
-      console.log(`Order ${orderId} charged successfully.`);
-      const updateOrder = `mutation {
-        updateOrder(
-          id: "${orderId}",
-          isPaid: true,
-          chargeId: "${charge.id}",
-        ) {
-          id
-        }
-      }`;
-      return execGQLQuery(updateOrder,
-        () => send(res, 200, {
-          message: `Customer ${userId} was charged
-            and purchase ${orderId} was NOT marked as paid.`,
-        }),
-        () => send(res, 200, {
-          message: `Customer ${userId} was charged
-            and purchase ${orderId} was marked as paid.`,
-        })
-      );
-    },
-    (err) => send(res, 400, {
-      error: `Customer ${userId} could not be charged by Stripe.`,
-    })
-  );
+  try {
+    console.log(`Order ${orderId} is about to be charged.`);
+    const charge = await createCharge(
+      totalCost * 100, userStripeId, cardStripeId);
+
+    const updateOrder = `mutation {
+      updateOrder(
+        id: "${orderId}",
+        isPaid: true,
+        chargeId: "${charge.id}",
+      ) {
+        id
+      }
+    }`;
+    await execGQLQuery(updateOrder);
+    console.log(`Order ${orderId} charged successfully.`);
+
+    send(res, 200, {
+      message: `Customer ${userId} was charged
+        and purchase ${orderId} was marked as paid.`,
+    });
+  } catch (error) {
+    send(res, 400, { error: error.message });
+  }
 }
 
-function updateUnverified(orderId, onSuccess) {
-  const updateData = `mutation {
-    updateOrder(
-      id: "${orderId}",
-      isVerified: false
-    ) {
-      id
-    }
-  }`;
-  return execGQLQuery(updateData, onSuccess,
-    (err) => send(res, 400, {
-      error: `Order ${orderId} could not be updated.`,
-    })
-  );
+async function updateUnverified(orderId, onSuccess) {
+  try {
+    const updateData = `mutation {
+      updateOrder(
+        id: "${orderId}",
+        isVerified: false
+      ) {
+        id
+      }
+    }`;
+    await execGQLQuery(updateData);
+  } catch(error) {
+    send(res, 400, { error: error.message });
+  }
 }
 
-function updateVerified(orderId) {
-  const updateData = `mutation {
-    updateOrder(
-      id: "${orderId}",
-      adminStatus: UPDATED,
-      isVerified: true
-    ) {
-      id
-    }
-  }`;
-  return execGQLQuery(updateData,
-    () => send(res, 200, {
-      message: `Order ${orderId} has been updated.`,
-    }),
-    (err) => send(res, 400, {
-      error: `Order ${orderId} could not be updated.`,
-    })
-  );
+async function updateVerified(orderId) {
+  try {
+    const updateData = `mutation {
+      updateOrder(
+        id: "${orderId}",
+        adminStatus: UPDATED,
+        isVerified: true
+      ) {
+        id
+      }
+    }`;
+    await execGQLQuery(updateData);
+  } catch(error) {
+    send(res, 400, { error: error.message });
+  }
 }
 
 module.exports = {
