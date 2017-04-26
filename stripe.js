@@ -24,6 +24,19 @@ function createCustomerAndAddSource(email, name, source) {
   });
 }
 
+function addSource(customerId, source) {
+  return new Promise((resolve, reject) => {
+    stripe.customers.createSource(
+      customerId, { source }, (err, card) => {
+        if (err) {
+          console.log(err);
+          return reject(err);
+        }
+        return resolve(card);
+      });
+  });
+}
+
 function createCharge(amount, customerId, cardId) {
   console.log(`Charging ${customerId} using ${cardId} card.`);
   return new Promise((resolve, reject) => {

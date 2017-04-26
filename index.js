@@ -2,7 +2,10 @@ const {
   createCustomerAndAddSource,
   createCharge,
   createRefund,
+  addSource,
 } = require('./stripe');
+
+const addStripeCard = addSource;
 
 const { execGQLQuery } = require('./gql');
 
@@ -16,6 +19,7 @@ module.exports = {
   createCustomerAndAddSource,
   createCharge,
   createRefund,
+  addStripeCard,
   execGQLQuery,
   processOrderChargeAndRespond,
   updateOrderUnverified,
