@@ -75,6 +75,7 @@ function createRefund(chargeId) {
 
 module.exports = {
   createCustomerAndAddSource,
+  addSource,
   createCharge,
   createRefund,
 };
